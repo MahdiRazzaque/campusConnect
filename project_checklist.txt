@@ -38,6 +38,7 @@ CAMPUS CONNECT PROJECT CHECKLIST
    - Offline support
    - Better error handling
    - Enhanced caching
+   - Add being able to change departure station
 
 3. Documentation
    - API documentation
