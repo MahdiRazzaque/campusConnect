@@ -2,6 +2,8 @@
 
 A web application that helps King's College London students manage their lecture schedules and train journeys from Leagrave station.
 
+> **Note**: This project was primarily generated using Cursor AI, an advanced AI coding assistant.
+
 ## Features
 
 - 📅 Calendar integration with lecture schedules
