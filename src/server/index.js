@@ -13,6 +13,30 @@ const calendarRoutes = require('./routes/calendarRoutes');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Debug logging for all requests
+app.use((req, res, next) => {
+    console.log('Incoming request:', {
+        method: req.method,
+        path: req.path,
+        headers: req.headers,
+        query: req.query
+    });
+    next();
+});
+
+// API Routes FIRST (before any other middleware)
+app.get('/api/health', (req, res) => {
+    console.log('Health check endpoint hit');
+    res.json({ status: 'ok' });
+});
+
+// Auth routes (no auth check needed)
+app.use('/api/auth', authRoutes);
+
+// Protected API routes
+app.use('/api/recommendations', authRoutes.checkAuth, recommendationRoutes);
+app.use('/api/calendar', authRoutes.checkAuth, calendarRoutes);
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/campus-connect')
     .then(() => console.log('Connected to MongoDB'))
@@ -54,35 +78,17 @@ app.use(session({
     }
 }));
 
-// API Routes first (before static files)
-app.use('/api', (req, res, next) => {
-    // Log API requests
-    console.log(`${req.method} ${req.path}`);
-    next();
-});
-
-// Basic health check
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok' });
-});
-
-// Auth routes (no auth check needed)
-app.use('/api/auth', authRoutes);
-
-// Protected API routes
-app.use('/api/recommendations', authRoutes.checkAuth, recommendationRoutes);
-app.use('/api/calendar', authRoutes.checkAuth, calendarRoutes);
-
-// Static files after API routes
+// Static files AFTER API routes
 app.use(express.static(path.join(__dirname, '../../dist')));
 
 // Catch-all route for client-side routing LAST
-app.get('*', (req, res, next) => {
-    // Only handle non-API routes
-    if (!req.path.startsWith('/api/')) {
-        res.sendFile(path.join(__dirname, '../../dist/index.html'));
+app.get('*', (req, res) => {
+    console.log('Catch-all route hit:', req.path);
+    if (req.path.startsWith('/api/')) {
+        console.log('API route not handled:', req.path);
+        res.status(404).json({ error: 'API endpoint not found' });
     } else {
-        next();
+        res.sendFile(path.join(__dirname, '../../dist/index.html'));
     }
 });
 
