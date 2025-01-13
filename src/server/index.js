@@ -30,12 +30,8 @@ global.sessionStore = sessionStore;
 
 // Middleware
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? 'https://campusconnect.duckdns.org'
-        : 'http://localhost:5173',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    origin: 'https://campusconnect.duckdns.org',
+    credentials: true
 }));
 app.use(express.json());
 
@@ -46,10 +42,10 @@ app.use(session({
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         httpOnly: true,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        domain: process.env.NODE_ENV === 'production' ? '.campusconnect.duckdns.org' : undefined,
+        sameSite: 'none',
+        domain: '.campusconnect.duckdns.org',
         maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days
     }
 }));
@@ -64,17 +60,6 @@ app.use('/api/auth', authRoutes);
 // Basic health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
-});
-
-// Serve static files
-app.use(express.static(path.join(__dirname, '../../dist')));
-
-// Handle client-side routing
-app.get('*', (req, res) => {
-    // Only serve index.html for non-API routes
-    if (!req.path.startsWith('/api/')) {
-        res.sendFile(path.join(__dirname, '../../dist/index.html'));
-    }
 });
 
 // Error handling middleware
