@@ -54,25 +54,27 @@ app.use(session({
     }
 }));
 
-// API Routes first
+// Apply auth check to protected routes
+app.use('/api/recommendations', authRoutes.checkAuth, recommendationRoutes);
+app.use('/api/calendar', authRoutes.checkAuth, calendarRoutes);
+
+// Auth routes (no auth check needed)
+app.use('/api/auth', authRoutes);
+
 // Basic health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
-// Auth routes (no auth check needed)
-app.use('/api/auth', authRoutes);
-
-// Protected API routes
-app.use('/api/recommendations', authRoutes.checkAuth, recommendationRoutes);
-app.use('/api/calendar', authRoutes.checkAuth, calendarRoutes);
-
-// Static files after API routes
+// Serve static files
 app.use(express.static(path.join(__dirname, '../../dist')));
 
-// Catch-all route for client-side routing LAST
+// Handle client-side routing
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../dist/index.html'));
+    // Only serve index.html for non-API routes
+    if (!req.path.startsWith('/api/')) {
+        res.sendFile(path.join(__dirname, '../../dist/index.html'));
+    }
 });
 
 // Error handling middleware
