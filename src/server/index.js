@@ -31,11 +31,11 @@ global.sessionStore = sessionStore;
 // Middleware
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
-        ? ['https://campusconnect.duckdns.org', /\.campusconnect\.duckdns\.org$/]
+        ? 'https://campusconnect.duckdns.org'
         : 'http://localhost:5173',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
@@ -54,13 +54,7 @@ app.use(session({
     }
 }));
 
-// API Routes first (before static files)
-app.use('/api', (req, res, next) => {
-    // Log API requests
-    console.log(`${req.method} ${req.path}`);
-    next();
-});
-
+// API Routes first
 // Basic health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
@@ -77,13 +71,8 @@ app.use('/api/calendar', authRoutes.checkAuth, calendarRoutes);
 app.use(express.static(path.join(__dirname, '../../dist')));
 
 // Catch-all route for client-side routing LAST
-app.get('*', (req, res, next) => {
-    // Only handle non-API routes
-    if (!req.path.startsWith('/api/')) {
-        res.sendFile(path.join(__dirname, '../../dist/index.html'));
-    } else {
-        next();
-    }
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../dist/index.html'));
 });
 
 // Error handling middleware
